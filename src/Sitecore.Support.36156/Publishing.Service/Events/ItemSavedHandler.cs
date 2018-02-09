@@ -7,7 +7,7 @@ using Sitecore.Framework.Conditions;
 using Sitecore.Publishing.Service.SitecoreAbstractions;
 using Sitecore.SecurityModel;
 
-namespace Sitecore.Publishing.Service.Events
+namespace Sitecore.Support.Publishing.Service.Events
 {
     public class ItemSavedHandler
     {

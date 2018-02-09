@@ -69,7 +69,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-    <Content Include="Publishing.Service\Events\ItemSavedHandler.cs.fix" />
     <None Include="web.config" />
   </ItemGroup>
   <PropertyGroup>
