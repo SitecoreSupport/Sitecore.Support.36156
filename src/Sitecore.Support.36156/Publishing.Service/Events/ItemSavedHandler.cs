@@ -41,7 +41,8 @@ namespace Sitecore.Publishing.Service.Events
                 return;
             }
 
-            bool updateVariantRevisions = false;
+            bool sharedFieldChanged = false;
+            bool unversionedFieldChanged = false;
 
             if (savedItemChanges.HasFieldsChanged)
             {
@@ -49,24 +50,32 @@ namespace Sitecore.Publishing.Service.Events
                 {
                     if (fieldChange.IsShared || fieldChange.IsUnversioned)
                     {
-                        updateVariantRevisions = true;
-                        break;
+                        if (fieldChange.IsShared)
+                        {
+                            sharedFieldChanged = true;
+
+                            break;
+                        }
+
+                        unversionedFieldChanged = true;                                                    
                     }
                 }
             }
-            
+
+            var updateVariantRevisions = sharedFieldChanged || unversionedFieldChanged;
+
             if (updateVariantRevisions)
             {
                 var versionsToUpdate =
-                    savedItem.Versions.GetVersions().Where(v => v.Version.Number != savedItem.Version.Number).ToArray();
+                    savedItem.Versions.GetVersions(includeAllLanguages: sharedFieldChanged).Where(v => v.Version.Number != savedItem.Version.Number || v.Language != savedItem.Language).ToArray();
                 
-                _logger.Info(string.Format("Starting to update the revisions for all versions of the item: {0}", savedItem.ID));
+                _logger.Debug(string.Format("Starting to update the revisions for all versions of the item: {0}", savedItem.ID));
 
                 using (new SecurityDisabler())
                 {
                     foreach (var itemVersion in versionsToUpdate)
                     {
-                        _logger.Info(string.Format("Updating the revision for all version {0} of the item: {1}", itemVersion.Version.Number, itemVersion.ID));
+                        _logger.Debug(string.Format("Updating the revision for all '{0}' versions of the item: {1}", itemVersion.Language, itemVersion.ID));
 
                         itemVersion.Editing.BeginEdit();
                         itemVersion.Fields[FieldIDs.Revision].SetValue(Guid.NewGuid().ToString(), true);
@@ -74,7 +83,7 @@ namespace Sitecore.Publishing.Service.Events
                     }
                 }
 
-                _logger.Info(string.Format("Completed updating the revisions for all versions of the item: {0}", savedItem.ID));
+                _logger.Debug(string.Format("Completed updating the revisions for all versions of the item: {0}", savedItem.ID));
             }
         }
     }
